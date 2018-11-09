@@ -1,0 +1,1 @@
+C:\Python27\python.exe HDR_Move_Canon80D.py
