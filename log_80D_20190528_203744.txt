@@ -1,0 +1,8 @@
+Summary 2019/05/28 20:37:44:
+ Found HDRs: 50
+ Moved HDRs: 50
+ Moved Images: 250
+ Skipped HDRs: 0
+ Skipped Images: 0
+
+Skipped Files List:

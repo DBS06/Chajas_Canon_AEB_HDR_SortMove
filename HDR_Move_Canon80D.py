@@ -58,11 +58,11 @@ def read_exif(path, exif_details, stop_tag=DEFAULT_STOP_TAG):
     return tags_img
 
 def print_table():
-    print "+-%s+-%s+-%s+-%s+" % ("-" * print_img_plh, "-" * print_tag_plh, "-" * print_tag_plh, "-" * print_tag_plh)
+    print("+-%s+-%s+-%s+-%s+" % ("-" * print_img_plh, "-" * print_tag_plh, "-" * print_tag_plh, "-" * print_tag_plh))
     return
 
 def print_tags(img, tag1, tag2, tag3):
-    print "| %-*s| %-*s| %-*s| %-*s|" % (print_img_plh, img, print_tag_plh, tag1, print_tag_plh, tag2, print_tag_plh, tag3)
+    print("| %-*s| %-*s| %-*s| %-*s|" % (print_img_plh, img, print_tag_plh, tag1, print_tag_plh, tag2, print_tag_plh, tag3))
     return
 
 #############################
@@ -73,18 +73,18 @@ def print_tags(img, tag1, tag2, tag3):
 ### MAIN
 #############################
 
-print "###################################"
-print "# Start HDR Move Canon 80D Script #"
-print "###################################"
-print ""
+print("###################################")
+print("# Start HDR Move Canon 80D Script #")
+print("###################################")
+print("")
 
-print "## Settings:"
-print "# Primary EXIF-Tag:            " + exif_primary_tag.name + " -> Value: " + str(exif_primary_tag.val)
-print "# Secondary EXIF-Tag:          " + exif_secondary_tag.name + " -> Value: " + str(exif_secondary_tag.val)
-print "# Tertiary EXIF-Tag:           " + exif_tertiary_tag.name + " -> Value: " + str(exif_tertiary_tag.val)
-print "# Search Images:               *" + image_file_ending
-print "# Min Images for HDR-Sequence: " + str(hdr_sequence_num_min)
-print ""
+print("## Settings:")
+print("# Primary EXIF-Tag:            " + exif_primary_tag.name + " -> Value: " + str(exif_primary_tag.val))
+print("# Secondary EXIF-Tag:          " + exif_secondary_tag.name + " -> Value: " + str(exif_secondary_tag.val))
+print("# Tertiary EXIF-Tag:           " + exif_tertiary_tag.name + " -> Value: " + str(exif_tertiary_tag.val))
+print("# Search Images:               *" + image_file_ending)
+print("# Min Images for HDR-Sequence: " + str(hdr_sequence_num_min))
+print("")
 
 # Global Variables
 directory = ""
@@ -96,12 +96,12 @@ hdr_list = []
 
 # Get path to image folder and proof if it exists
 while (not os.path.exists(directory)):
-    directory = raw_input("Path to Image Folder (abort with hit 'RETURN'): ")
+    directory = input("Path to Image Folder (abort with hit 'RETURN'): ")
     # directory = "C:\Users\phst\Pictures\Test_Pictures"
     if (directory == ""):
         sys.exit("Exit by User!")
     if (not os.path.exists(directory)):
-        print "invalid path!"
+        print("invalid path!")
 
 # Find all images in folder and add to file list
 for file in os.listdir(directory):
@@ -109,7 +109,7 @@ for file in os.listdir(directory):
         #print(os.path.join(directory, file))
         imgFiles.append(file)
 
-print " "
+print(" ")
 target_path = ""
 main_dir_name = os.path.basename(directory)
 target_main_dir_name = main_dir_name + "_HDRs"
@@ -138,7 +138,7 @@ for img in imgFiles:
 
             # increase hdr counter and print message
             hdr_count += 1
-            print "\r\n| # HDR_%03d" % (hdr_count)
+            print("\r\n| # HDR_%03d" % (hdr_count))
             print_table()
             print_tags("IMG-Name", exif_primary_tag.name, exif_secondary_tag.name, exif_tertiary_tag.name)
             print_table()
@@ -155,10 +155,10 @@ hdrs_found = len(hdr_move_list)
 if hdrs_found == 0:
     sys.exit("No HDRs found in this directory!")
 
-print "\r\nHDRs Found: %d" % (hdrs_found)
+print("\r\nHDRs Found: %d" % (hdrs_found))
 
 # Ask user if he wants to 
-proceed = raw_input("Do you want to start the moving the found HDR-Sequences? (Y)es (N)o: ")
+proceed = input("Do you want to start the moving the found HDR-Sequences? (Y)es (N)o: ")
 if (proceed is not "Y"):
     sys.exit("Exit by User!")
 
@@ -198,12 +198,12 @@ while True:
 
                 # if target directory does not exists create it and copy the first image from the HDR-Sequence
                 if not os.path.exists(dirpath): 
-                    print "Makedir: %s" % (dirname)
+                    print("Makedir: %s" % (dirname))
                     os.makedirs(dirpath)
                     shutil.copy2(source_path, target_path_copy)
 
                 # Move the HDR-Sequence to the folder and inform the user about it
-                print "Move: " + img
+                print("Move: " + img)
                 shutil.move(source_path, target_path) # move image to target directory
                 img_move_count += 1
         else:
@@ -212,22 +212,22 @@ while True:
             hdr_skip_list.append(img_move_list)
             for img in img_move_list:
                 skip_img_count += 1
-                print "HDR-Sequence is less then " + str(hdr_sequence_num_min)
-                print "Skip: " + img
+                print("HDR-Sequence is less then " + str(hdr_sequence_num_min))
+                print("Skip: " + img)
 
-        print " "
+        print(" ")
     except IndexError:
         break
 
-print "- Finish HDR Move Script -"
-print " "
-print "Summary: "
-print " Found HDRs: %d"  % (hdrs_found)
-print " Moved HDRs: %d"  % (move_hdr_count)
-print " Moved Images:  %d" % (img_move_count)
-print " Skipped HDRs:  %d" % (len(hdr_skip_list))
-print " Skipped Images:  %d" % (skip_img_count)
-print " "
+print("- Finish HDR Move Script -")
+print(" ")
+print("Summary: ")
+print(" Found HDRs: %d"  % (hdrs_found))
+print(" Moved HDRs: %d"  % (move_hdr_count))
+print(" Moved Images:  %d" % (img_move_count))
+print(" Skipped HDRs:  %d" % (len(hdr_skip_list)))
+print(" Skipped Images:  %d" % (skip_img_count))
+print(" ")
 
 logf = open("log_80D_"+ time.strftime("%Y%m%d_%H%M%S") + ".txt","a+")
 logf.write("Summary " + time.strftime("%Y/%m/%d %H:%M:%S") + ":\n")
@@ -246,12 +246,12 @@ while True:
         log_skip_sequ_counter += 1
 
         tmp_str = "Skipped HDR-Sequence: " + str(log_skip_sequ_counter)
-        print tmp_str
+        print(tmp_str)
         logf.write(tmp_str + "\n")
 
         for img in img_skip_list:
             tmp_str = str(img)
-            print tmp_str
+            print(tmp_str)
             logf.write(tmp_str + "\n")
         logf.write("\n")
     except IndexError:
