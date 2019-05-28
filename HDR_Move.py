@@ -7,7 +7,7 @@ import shutil
 import sys
 import time
 
-print "- Start HDR Move Script -"
+print("- Start HDR Move Script -")
 
 directory = ""
 txtfiles = []
@@ -15,25 +15,25 @@ txtfiles = []
 pattern = re.compile("(IMG_\w+)")
 
 while (not os.path.exists(directory)):
-    directory = raw_input("input path: ")
+    directory = input("input path: ")
     # directory = "C:\Users\phst\OneDrive\Bilder\Photos\URBEX"
     if (directory == ""):
         sys.exit("Exit by User!")
     if (not os.path.exists(directory)):
-        print "invalid path!"
+        print("invalid path!")
     
 for file in os.listdir(directory):
     if (file.endswith(".txt") or file.endswith(".TXT")) and "HDR_" in file:
         #print(os.path.join(directory, file))
         txtfiles.append(file)
 
-print " "
+print(" ")
 
 if len(txtfiles) == 0:
     sys.exit("No HDR-TXTs found in this directory!")
 
-print "\r\nHDR-TXTs Found: %d" % (len(txtfiles))
-proceed = raw_input("Do you want to proceed? (Y)es (N)o: ")
+print("\r\nHDR-TXTs Found: %d" % (len(txtfiles)))
+proceed = input("Do you want to proceed? (Y)es (N)o: ")
 if (proceed is not "Y"):
     sys.exit("Exit by User!")
 
@@ -69,12 +69,12 @@ for txtfile in txtfiles: # Go through every txt-file
 
             if os.path.exists(source_path): # if extracted image name exists
                 if not os.path.exists(dirpath): # if target directory does not exists create it
-                    print " "
-                    print "Makedir: %s" % (dirname)
+                    print(" ")
+                    print("Makedir: %s" % (dirname))
                     os.makedirs(dirpath)
                     shutil.copy2(source_path, source_path_copy)
 
-                print "File: %d | line %s: %s" % (count, it+1, match.group(0))
+                print("File: %d | line %s: %s" % (count, it+1, match.group(0)))
                 shutil.move(source_path, target_path) # move image to target directory
                 # shutil.move(os.path.join(directory, txtfile), target_path)
                 copy_count += 1
@@ -86,14 +86,14 @@ for txtfile in txtfiles: # Go through every txt-file
         shutil.move(os.path.join(directory, txtfile), dirpath)
         txt_move_count += 1
 
-print "- Finish HDR Move Script -"
-print " "
-print "Summary: "
-print " Found HDR-TXT-Files: %d"  % (len(txtfiles))
-print " Moved HDR-TXT-Files: %d"  % (txt_move_count)
-print " Moved Images:  %d" % (copy_count)
-print " Missing Images: %d" % (len(missing_files))
-print " "
+print("- Finish HDR Move Script -")
+print(" ")
+print("Summary: ")
+print(" Found HDR-TXT-Files: %d"  % (len(txtfiles)))
+print(" Moved HDR-TXT-Files: %d"  % (txt_move_count))
+print(" Moved Images:  %d" % (copy_count))
+print(" Missing Images: %d" % (len(missing_files)))
+print(" ")
 
 logf = open("log_"+ time.strftime("%Y%m%d_%H%M%S") + ".txt","a+")
 logf.write("Summary " + time.strftime("%Y/%m/%d %H:%M:%S") + ":\n")
@@ -105,7 +105,7 @@ logf.write(" Missing Images: " + str((len(missing_files))) + "\n")
 logf.write("\nMissing Files List:\n")
 for miss in missing_files:
     logf.write(miss + "\n")
-    print miss
+    print(miss)
 logf.close()
 
 os.system("pause")
