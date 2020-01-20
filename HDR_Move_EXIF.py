@@ -262,14 +262,3 @@ os.system("pause")
 
 #############################
 #############################
-
-# while True:
-#     try:
-#         hdr_copy_list = cr2_copy_list.popleft()
-#         print "\r\nHDR_%03d" % (move_hdr_count)
-#         move_hdr_count += 1
-#         for img in hdr_copy_list:
-#             print img
-#         print " "
-#     except IndexError:
-#         break
