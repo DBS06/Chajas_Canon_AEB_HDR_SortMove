@@ -12,7 +12,7 @@ This repository includes two scripts:
 
 **HDR_Move_EXIF.py** tested with Canon EOS 60D and 80D. Will be constantly supported and updated if necessary or requested.
 
-**HDR_Move_EXIF.py** tested with Canon EOS 60D and Magic-Lantern-Nightly.2018Jul03.60D111. Will not be constantly supported and updated, because I am not using Magic-Lantern anymore (not available for my 80D). But anyways I don't think there will be a change needed.
+**HDR_Move_EXIF.py** tested with Canon EOS 60D and Magic-Lantern-Nightly.2018Jul03.60D111. Will not be constantly supported and updated, because I am not using Magic-Lantern anymore (not available for my 80D). But anyways, I don't think there will be a change needed.
 
 ## Dependencies
 
@@ -51,8 +51,8 @@ For example if the path would be `C:\This\is\my\path\Linked Living` the followin
   * ...
   * Linked Living_HDR_006
 
-Inside of the parent HDR folder (`Linked Living_HDRs`) the first image of every HDR-Sequence will be stored and renamed ie. from `IMG_9053.CR2` to `IMG_9053_HDR_001.CR2`.  
-This helps to get an overview which HDRs you have made and acts as a previe-image.
+Inside of the parent HDR folder (`Linked Living_HDRs`) the first image of every HDR-Sequence will be stored and renamed i.e. from `IMG_9053.CR2` to `IMG_9053_HDR_001.CR2`.  
+This helps to get an overview which HDRs you have made and it will also acts as a preview-image.
 
 Inside of the subfolder `Linked Living_HDR_001` the complete HDR-Sequence will be stored, for this example folder this would be:  
 
@@ -61,7 +61,7 @@ Inside of the subfolder `Linked Living_HDR_001` the complete HDR-Sequence will b
   * IMG_9054.CR2
   * IMG_9055.CR2
 
-The number inside of the folder name `Linked Living_HDR_001` -> `001` corresponds with the number of the preview-image -> `IMG_9053_HDR_001.CR2` -> `001`.  
+**Note:** The number inside of the folder name `Linked Living_HDR_001` -> `001` corresponds with the number of the preview-image -> `IMG_9053_HDR_001.CR2` -> `001`.  
 
 ### Searching for HDR-Sequences
 
@@ -144,4 +144,4 @@ And the searching and moving of HDR-Sequences is complete and the following fold
 Similar to *Usage HDR_Move_EXIF.py*, except that it will rely on the created *.txt* files by Magic-Lantern and not on the EXIF-Data.  
 **For example:** The file `HDR_3800.txt` contains the following text:  
 `IMG_3800.JPG IMG_3801.JPG IMG_3802.JPG IMG_3803.JPG IMG_3804.JPG`
-The script will search for the corresponding images and will sort as mentioned above.
+The script will search for the corresponding images and will sort the images as described in **Usage HDR_Move_EXIF.py**.
