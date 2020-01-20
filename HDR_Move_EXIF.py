@@ -73,9 +73,9 @@ def print_tags(img, tag1, tag2, tag3):
 ### MAIN
 #############################
 
-print("###################################")
-print("# Start HDR Move Canon 80D Script #")
-print("###################################")
+print("###########################################")
+print("# Chaja's - Canon AEB HDR SortMove - EXIF #")
+print("###########################################")
 print("")
 
 print("## Settings:")
