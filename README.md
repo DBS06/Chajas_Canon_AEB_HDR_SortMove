@@ -150,3 +150,9 @@ Similar to *Usage HDR_Move_EXIF.py*, except that it will rely on the created *.t
 **For example:** The file `HDR_3800.txt` contains the following text:  
 `IMG_3800.JPG IMG_3801.JPG IMG_3802.JPG IMG_3803.JPG IMG_3804.JPG`
 The script will search for the corresponding images and will sort the images as described in **Usage HDR_Move_EXIF.py**.
+
+TODO:
+* Add to last HDR_XX Folder instead of filling up
+* Create Preview Image as JPG instead of Raw
+* Use JSON for settings
+* Add cli 
