@@ -1,8 +1,42 @@
 #!/usr/bin/python
 
-import sys
-import os
+from collections import deque
 import argparse
+import time
+import json
+import os
+import string
+import re
+import shutil
+import sys
+import exifread
+
+if sys.version_info < (3, 0):
+    print("Sorry, Python 3.x is required")
+    sys.exit(1)
+
+#############################
+# Globals
+#############################
+
+CDG_FILE_NAME = "config.json"
+DEFAULT_STOP_TAG = ""
+
+# placeholders for printing
+print_img_plh = 13
+print_tag_plh = 23
+
+
+class ExifTag(object):  # pylint: disable=too-few-public-methods
+    """
+    Class to define the EXIF-Tags which indicates that a picture is part of a HDR-Sequence
+    """
+
+    def __init__(self, name, val):
+        # IFD name followed by the tag name. i.e.: 'EXIF DateTimeOriginal', 'Image Orientation', 'MakerNote FocusMode'
+        self.name = name
+        # value of the tag
+        self.val = val
 
 
 def main():  # pragma: no cover
@@ -12,12 +46,44 @@ def main():  # pragma: no cover
 
     parser = create_parser()
     args = parser.parse_args()
+    default_cfg_file_path = os.path.dirname(os.path.realpath(__file__)) + '/' + CDG_FILE_NAME
+    config = load_json_cfg(default_cfg_file_path)
 
     print(args.path)
-    if args.quiet:
-        print("quiet")
+    if args.yes:
+        print("auto yes")
     else:
-        print("loud")
+        print("ask")
+
+    print(config)
+
+
+#############################
+# Functions
+#############################
+
+def read_exif(path, exif_details, stop_tag=DEFAULT_STOP_TAG):
+    img = open(path, 'rb')
+    tags_img = exifread.process_file(img,  details=exif_details, stop_tag=stop_tag)
+    img.close()
+    return tags_img
+
+
+def print_table():
+    print("+-%s+-%s+-%s+-%s+" % ("-" * print_img_plh, "-" * print_tag_plh, "-" * print_tag_plh, "-" * print_tag_plh))
+    return
+
+
+def print_tags(img, tag1, tag2, tag3):
+    print("| %-*s| %-*s| %-*s| %-*s|" % (print_img_plh, img, print_tag_plh, tag1, print_tag_plh, tag2, print_tag_plh, tag3))
+    return
+
+
+def load_json_cfg(json_cfg):
+    ''' Remove comments from JSON cfg file and load the file '''
+    with open(json_cfg, 'r') as config_file:
+        config_without_comments = '\n'.join([row for row in config_file.readlines() if len(row.split('//')) == 1])
+        return json.loads(config_without_comments, encoding="utf-8")
 
 
 def create_parser():  # pragma: no cover
@@ -30,27 +96,10 @@ def create_parser():  # pragma: no cover
         description='This script helps to sort HDR images from Canon Cameras')
 
     main_parser.add_argument("-p", "--path", action="store", default='', help="path to image folder")
-    main_parser.add_argument("-q", "--quiet", action="store_true", default='', help="Dont ask if sorting should start")
-
-    # add_argument_completion(main_parser, "--docker", action="store_true", help="run stuff in docker container")
-    # # add_argument_completion(main_parser,"--docker", action="store_true", help="run stuff in docker container")
-    # add_argument_completion(main_parser, "--docker-cfg", dest='docker_config_file', nargs="?",
-    #                         default='scripts/.docker.json', action="store",
-    #                         help="config file for docker environment (default: scripts/.docker.json)")
-
-    # add_argument_completion(main_parser, "--ng-master-app-path", action="store", nargs="?", default='/fw/ng-master-app',
-    #                         help="location of the ng-master-app repository")
-
-    # add_argument_completion(main_parser, "--docker-image", action="store", nargs="?",
-    #                         help="docker image (overwrites values in config file)")
-
-    # add_argument_completion(main_parser, "--docker-image-tag", action="store", nargs="?",
-    #                         help="docker image (overwrites values in config file)")
-
-    # add_argument_completion(main_parser, "--keep-container", action="store_true",
-    #                         help="do not delete the container after execution (only for debuging purposes)")
-
-    # subparser = main_parser.add_subparsers(help="sub commands", dest="subcmd")
+    main_parser.add_argument("-m", "--mode", action="store", default='auto',
+                             help="defines if HDR-Search is based on exif-data, txt-files, or decide based on folders content: <auto/exif/txt>")
+    main_parser.add_argument("-y", "--yes", action="store_true", default='',
+                             help="sorting starts automatically, no asking!")
 
     return main_parser
 

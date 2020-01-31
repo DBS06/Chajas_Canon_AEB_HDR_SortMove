@@ -1,0 +1,63 @@
+{
+    // defines if HDR-Search is based on exif-data, txt-files, or decide based on folders content
+    // Possible values: <-/auto/exif/txt>
+    //                  -:    Ask at startup
+    //                  auto: auto detection
+    //                  exif: exif-mode
+    //                  txt:  txt-mode
+    "detectionMode": "auto",
+    // General Settings
+    "general": {
+        "hdrMainDir": {
+            "Prefix": "",
+            "Postfix": "_HDRs",
+            "Name": {
+                "useParentFolderName": true,
+                "customName": ""
+            }
+        },
+        "hdrSubDir": {
+            "Prefix": "",
+            "Postfix": "_HDR_",
+            "Name": {
+                "useParentFolderName": true,
+                "customName": ""
+            },
+            "numPadding": 3
+        },
+        "imageSrcFileEnding": "CR2",
+        "previewFiles": {
+            "create": true,
+            // TODO: Implement
+            "convertRawToJpg": false,
+            "convertQuality": "high"
+        },
+        "createLogFile": true
+    },
+    // EXIF-Mode Settings
+    "exifModeCfg": {
+        "exifPrimaryTag": {
+            "name": "EXIF ExposureMode",
+            "value": "Auto Bracket"
+        },
+        "exifSecondaryTag": {
+            "name": "MakerNote BracketMode",
+            "value": "AEB"
+        },
+        "exifTertiaryTag": {
+            "name": "MakerNote BracketValue",
+            "value": "0"
+        },
+        "stopTag": {
+            "name": "",
+            "value": ""
+        },
+        "hdrSequenceMinNum": 3
+    },
+    // TXT-Mode Settings
+    "txtModeCfg": {
+        "fileNameFilter": "HDR_",
+        "fileEnding": "txt",
+        "deleteTxtFiles": false
+    }
+}
