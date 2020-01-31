@@ -12,7 +12,7 @@ This repository includes two scripts:
 
 **HDR_Move_EXIF.py** tested with Canon EOS 60D and 80D. Will be constantly supported and updated if necessary or requested.
 
-**HDR_Move_EXIF.py** tested with Canon EOS 60D and Magic-Lantern-Nightly.2018Jul03.60D111. Will not be constantly supported and updated, because I am not using Magic-Lantern anymore (not available for my 80D). But anyways, I don't think there will be a change needed.
+**HDR_Move_ML.py** tested with Canon EOS 60D and Magic-Lantern-Nightly.2018Jul03.60D111. Will not be constantly supported and updated, because I am not using Magic-Lantern anymore (not available for my 80D). But anyways, I don't think there will be a change needed.
 
 ## Dependencies
 
