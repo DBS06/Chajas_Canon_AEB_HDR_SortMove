@@ -36,21 +36,17 @@
     },
     // EXIF-Mode Settings
     "exifModeCfg": {
-        "exifPrimaryTag": {
+        "primaryTag": {
             "name": "EXIF ExposureMode",
             "value": "Auto Bracket"
         },
-        "exifSecondaryTag": {
+        "secondaryTag": {
             "name": "MakerNote BracketMode",
             "value": "AEB"
         },
-        "exifTertiaryTag": {
+        "tertiaryTag": {
             "name": "MakerNote BracketValue",
             "value": "0"
-        },
-        "stopTag": {
-            "name": "",
-            "value": ""
         },
         "hdrSequenceMinNum": 3
     },
