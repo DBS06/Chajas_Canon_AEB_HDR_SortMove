@@ -8,21 +8,25 @@ import re
 import shutil
 import sys
 import time
+import fnmatch
 
 # Class to define the EXIF-Tags which indicates that a picture is part of a HDR-Sequence
+
+
 class ExifTag:
     def __init__(self, name, val):
-        self.name = name # IFD name followed by the tag name. For example: 'EXIF DateTimeOriginal', 'Image Orientation', 'MakerNote FocusMode'
-        self.val = val # value of the tag
+        self.name = name  # IFD name followed by the tag name. For example: 'EXIF DateTimeOriginal', 'Image Orientation', 'MakerNote FocusMode'
+        self.val = val  # value of the tag
 
 #############################
-### Script Settings
+# Script Settings
 #############################
 
-### Common Stuff
+
+# Common Stuff
 image_file_ending = ".CR2"
 
-### Printing Stuff
+# Printing Stuff
 
 # placeholders for printing
 print_img_plh = 13
@@ -30,12 +34,12 @@ print_tag_plh = 23
 # default stop tag
 DEFAULT_STOP_TAG = ""
 
-### HDR-Sequence Stuff
+# HDR-Sequence Stuff
 
 # minimum number of images which a HDR-Sequence must have
 hdr_sequence_num_min = 3
 
-## EXIF-Tags which indicates that a picture is part of a HDR-Sequence:
+# EXIF-Tags which indicates that a picture is part of a HDR-Sequence:
 # primary-tag is used to find the images which are part of an HDR-Sequence
 # this tag should be part of 'Standard'-EXIF-Tags to increase the search speed, otherwise it would be really slow
 exif_primary_tag = ExifTag("EXIF ExposureMode", "Auto Bracket")
@@ -48,7 +52,7 @@ exif_tertiary_tag = ExifTag("MakerNote BracketValue", "0")
 
 
 #############################
-### Functions
+# Functions
 #############################
 
 def read_exif(path, exif_details, stop_tag=DEFAULT_STOP_TAG):
@@ -57,9 +61,11 @@ def read_exif(path, exif_details, stop_tag=DEFAULT_STOP_TAG):
     img.close()
     return tags_img
 
+
 def print_table():
     print("+-%s+-%s+-%s+-%s+" % ("-" * print_img_plh, "-" * print_tag_plh, "-" * print_tag_plh, "-" * print_tag_plh))
     return
+
 
 def print_tags(img, tag1, tag2, tag3):
     print("| %-*s| %-*s| %-*s| %-*s|" % (print_img_plh, img, print_tag_plh, tag1, print_tag_plh, tag2, print_tag_plh, tag3))
@@ -70,7 +76,7 @@ def print_tags(img, tag1, tag2, tag3):
 
 
 #############################
-### MAIN
+# MAIN
 #############################
 
 print("###########################################")
@@ -157,7 +163,7 @@ if hdrs_found == 0:
 
 print("\r\nHDRs Found: %d" % (hdrs_found))
 
-# Ask user if he wants to 
+# Ask user if he wants to
 proceed = input("Do you want to start the moving the found HDR-Sequences? (Y)es (N)o: ")
 if (proceed is not "Y"):
     sys.exit("Exit by User!")
@@ -168,6 +174,7 @@ skip_img_count = 0
 
 if not os.path.exists(target_main_dir_path):
     os.makedirs(target_main_dir_path)
+
 
 # As long as hdr_move_list is not empty
 while True:
@@ -186,7 +193,7 @@ while True:
                 dirname = "%s_HDR_%03d" % (main_dir_name, move_hdr_count)
                 dirpath = os.path.join(target_main_dir_path, dirname)
                 path_exists = os.path.exists(dirpath)
-            
+
             for img in img_move_list:
                 # Create target and source paths for image in img_move_list
                 source_path = os.path.join(directory, img)
@@ -194,20 +201,21 @@ while True:
                 # Create copy path for the first image from the HDR-Sequence
                 # -> the script copies the first image from the HDR-Sequence to the HDR-Main-Folder and appends the folder name to the file name
                 # -> makes it easier to look through the HDR-Sequences and to identify which folder has the remaining images
-                target_path_copy = "%s_HDR_%03d%s" % (os.path.join(target_main_dir_path, img.replace(image_file_ending, "") ), move_hdr_count, image_file_ending)
+                target_path_copy = "%s_HDR_%03d%s" % (os.path.join(target_main_dir_path, img.replace(
+                    image_file_ending, "")), move_hdr_count, image_file_ending)
 
                 # if target directory does not exists create it and copy the first image from the HDR-Sequence
-                if not os.path.exists(dirpath): 
+                if not os.path.exists(dirpath):
                     print("Makedir: %s" % (dirname))
                     os.makedirs(dirpath)
                     shutil.copy2(source_path, target_path_copy)
 
                 # Move the HDR-Sequence to the folder and inform the user about it
                 print("Move: " + img)
-                shutil.move(source_path, target_path) # move image to target directory
+                shutil.move(source_path, target_path)  # move image to target directory
                 img_move_count += 1
         else:
-            
+
             # inform the user which files were skipped
             hdr_skip_list.append(img_move_list)
             for img in img_move_list:
@@ -222,14 +230,14 @@ while True:
 print("- Finish HDR Move Script -")
 print(" ")
 print("Summary: ")
-print(" Found HDRs: %d"  % (hdrs_found))
-print(" Moved HDRs: %d"  % (move_hdr_count))
+print(" Found HDRs: %d" % (hdrs_found))
+print(" Moved HDRs: %d" % (move_hdr_count))
 print(" Moved Images:  %d" % (img_move_count))
 print(" Skipped HDRs:  %d" % (len(hdr_skip_list)))
 print(" Skipped Images:  %d" % (skip_img_count))
 print(" ")
 
-logf = open("log_80D_"+ time.strftime("%Y%m%d_%H%M%S") + ".txt","a+")
+logf = open("log_80D_" + time.strftime("%Y%m%d_%H%M%S") + ".txt", "a+")
 logf.write("Summary " + time.strftime("%Y/%m/%d %H:%M:%S") + ":\n")
 logf.write(" Found HDRs: " + str(hdrs_found) + "\n")
 logf.write(" Moved HDRs: " + str(move_hdr_count) + "\n")
