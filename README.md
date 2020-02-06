@@ -4,12 +4,9 @@ Is a python script which helps to sort HDR images.
 
 Originally this Script was written to work with Magic-Lantern, but Magic-Lantern isn’t available for Canon 60D+ Models, therefore I wrote a second script which reads and analyzes the EXIF-Data and detects the HDR sequences.
 
-**If you like my work and want to support me, please follow me on my Instagram Accounts!**
-
-Normal Account: **https://www.instagram.com/cha__ja/**
-
-Urbex Account:  **https://www.instagram.com/chaja_goes_urbex/**
-
+**If you like my work and want to support me, please follow me on my Instagram Accounts!**  
+Normal Account: **https://www.instagram.com/cha__ja/**  
+Urbex Account:  **https://www.instagram.com/chaja_goes_urbex/**  
 
 This repository includes two scripts:
 
