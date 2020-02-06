@@ -120,6 +120,17 @@ target_path = ""
 main_dir_name = os.path.basename(directory)
 target_main_dir_name = main_dir_name + "_HDRs"
 target_main_dir_path = os.path.join(directory, target_main_dir_name)
+sub_dir_name_mask = "%s_HDR_" % (main_dir_name)
+
+move_hdr_count_offset = 0
+
+if os.path.exists(target_main_dir_path):
+    print("prexisting folder '" + target_main_dir_name + "' found!")
+    existingHdrFolders = fnmatch.filter(os.listdir(target_main_dir_path), sub_dir_name_mask + '*')
+    if (len(existingHdrFolders) > 0):
+        existingHdrFolders.sort(reverse=True)
+        lastHdrFolder = existingHdrFolders[0]
+        move_hdr_count_offset = int(existingHdrFolders[0].replace(sub_dir_name_mask, ''))
 
 # Find HDR-Sequences
 for img in imgFiles:
@@ -144,7 +155,7 @@ for img in imgFiles:
 
             # increase hdr counter and print message
             hdr_count += 1
-            print("\r\n| # HDR_%03d" % (hdr_count))
+            print("\r\n| # HDR_%03d" % (hdr_count + move_hdr_count_offset))
             print_table()
             print_tags("IMG-Name", exif_primary_tag.name, exif_secondary_tag.name, exif_tertiary_tag.name)
             print_table()
@@ -175,8 +186,7 @@ skip_img_count = 0
 if not os.path.exists(target_main_dir_path):
     os.makedirs(target_main_dir_path)
 
-
-# As long as hdr_move_list is not empty
+    # As long as hdr_move_list is not empty
 while True:
     try:
         # extract first HDR-Sequence form hdr_move_list
@@ -190,7 +200,7 @@ while True:
             # if directory already exists, try next higher number for directory
             while (path_exists):
                 move_hdr_count += 1
-                dirname = "%s_HDR_%03d" % (main_dir_name, move_hdr_count)
+                dirname = "%s%03d" % (sub_dir_name_mask, move_hdr_count + move_hdr_count_offset)
                 dirpath = os.path.join(target_main_dir_path, dirname)
                 path_exists = os.path.exists(dirpath)
 
@@ -202,7 +212,7 @@ while True:
                 # -> the script copies the first image from the HDR-Sequence to the HDR-Main-Folder and appends the folder name to the file name
                 # -> makes it easier to look through the HDR-Sequences and to identify which folder has the remaining images
                 target_path_copy = "%s_HDR_%03d%s" % (os.path.join(target_main_dir_path, img.replace(
-                    image_file_ending, "")), move_hdr_count, image_file_ending)
+                    image_file_ending, "")), move_hdr_count + move_hdr_count_offset, image_file_ending)
 
                 # if target directory does not exists create it and copy the first image from the HDR-Sequence
                 if not os.path.exists(dirpath):
