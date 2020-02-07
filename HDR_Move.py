@@ -11,6 +11,7 @@ import re
 import shutil
 import sys
 import exifread
+import fnmatch
 
 if sys.version_info < (3, 0):
     print("Sorry, Python 3.x is required")
@@ -63,18 +64,24 @@ class CfgTxtMode:
     deleteTxtFiles: bool
 
 
+@dataclass
+class GeneralData:
+    searchDirName = ""
+    searchDirPath = ""
+    targetMainDirName = ""
+    targetMainDirPath = ""
+    targetSubDirNameMask = ""
+    imgFiles = []
+    hdrMoveList = deque()
+    hdrSkipList = deque()
+    hdrCount = 0
+    hdrCountOffset = 0
+    hdrList = []
+
+
 # placeholders for printing
 print_img_plh = 13
 print_tag_plh = 23
-
-# Global Variables
-searchDir = ""
-imageFileEnding = ""
-imgFiles = []
-hdr_move_list = deque()
-hdr_skip_list = deque()
-hdr_count = 0
-hdr_list = []
 
 
 class ExifTag(object):  # pylint: disable=too-few-public-methods
@@ -98,8 +105,16 @@ def main():  # pragma: no cover
     print("# Chaja's - Canon AEB HDR SortMove #")
     print("####################################")
 
-    parser = create_parser()
+    parser = createParser()
     args = parser.parse_args()
+    genData = GeneralData()
+
+    defaultCfgFilePath = os.path.dirname(os.path.realpath(__file__)) + '/' + CDG_FILE_NAME
+    config = loadJsonCfg(defaultCfgFilePath)
+
+    cfgGeneral = parseGeneralCfg(config)
+    cfgExif = parseExifModeCfg(config)
+    cfgTxt = parseTxtModeCfg(config)
 
     if args.path == '':
         # Get path to image folder and proof if it exists
@@ -110,63 +125,84 @@ def main():  # pragma: no cover
                 sys.exit("Exit by User!")
 
             if (os.path.exists(directory)):
-                searchDir = directory
+                genData.searchDir = directory
                 break
             else:
                 print("invalid path!")
     else:
         if (os.path.exists(args.path)):
-            searchDir = args.path
+            genData.searchDir = args.path
         else:
             sys.exit("invalid path!")
 
-    print(searchDir)
+    # Fill up general data
+    genData.searchDirPath = os.path.basename(genData.searchDir)
+    if (cfgGeneral.hdrMainDir_useParentFolderName):
+        genData.targetMainDirName = cfgGeneral.hdrMainDir_Prefix + genData.searchDirPath + cfgGeneral.hdrMainDir_Postfix
+    else:
+        genData.targetMainDirName = cfgGeneral.hdrMainDir_Prefix + \
+            cfgGeneral.hdrMainDir_CustomName + cfgGeneral.hdrMainDir_Postfix
 
-    default_cfg_file_path = os.path.dirname(os.path.realpath(__file__)) + '/' + CDG_FILE_NAME
-    config = load_json_cfg(default_cfg_file_path)
+    genData.targetMainDirPath = os.path.join(genData.searchDir, genData.targetMainDirName)
+
+    if (cfgGeneral.hdrMainDir_useParentFolderName):
+        genData.targetSubDirNameMask = cfgGeneral.hdrSubDir_Prefix + genData.searchDirPath + cfgGeneral.hdrSubDir_Postfix
+    else:
+        genData.targetSubDirNameMask = cfgGeneral.hdrSubDir_Prefix + \
+            cfgGeneral.hdrSubDir_CustomName + cfgGeneral.hdrSubDir_Postfix
+
+    if os.path.exists(genData.targetMainDirPath):
+        print("prexisting folder '" + genData.targetMainDirPath + "' found!")
+        existingHdrFolders = fnmatch.filter(os.listdir(genData.targetMainDirPath), genData.targetSubDirNameMask + '*')
+        if (len(existingHdrFolders) > 0):
+            genData.hdrCountOffset = 0
+            for folder in existingHdrFolders:
+                folderNum = int(folder.replace(genData.targetSubDirNameMask, ''))
+                if (folderNum > genData.hdrCountOffset):
+                    genData.hdrCountOffset = folderNum
+
+    print("General Data:")
+    print(genData.searchDirName)
+    print(genData.searchDirPath)
+    print(genData.targetMainDirName)
+    print(genData.targetMainDirPath)
+    print(genData.targetSubDirNameMask)
+    print(str(genData.hdrCountOffset))
 
     # TODO: check which mode should be used
-    cfgGeneral = parseGeneralCfg(config)
-    cfgExif = parseExifModeCfg(config)
-    cfgTxt = parseTxtModeCfg(config)
-
-    print(cfgGeneral)
-    print(cfgExif)
-    print(cfgTxt)
-
-    # hdr_move_lise =
-    getExifHdrList(cfgGeneral, cfgExif)
+    # hdr_move_list =
+    getExifHdrList(genData, cfgGeneral, cfgExif)
 
 
 #############################
 # Functions
 #############################
 
-def read_exif(path, exif_details, stop_tag=DEFAULT_STOP_TAG):
+def readExif(path, exif_details, stop_tag=DEFAULT_STOP_TAG):
     img = open(path, 'rb')
     tags_img = exifread.process_file(img, details=exif_details, stop_tag=stop_tag)
     img.close()
     return tags_img
 
 
-def print_table():
+def printTable():
     print("+-%s+-%s+-%s+-%s+" % ("-" * print_img_plh, "-" * print_tag_plh, "-" * print_tag_plh, "-" * print_tag_plh))
     return
 
 
-def print_tags(img, tag1, tag2, tag3):
+def printTags(img, tag1, tag2, tag3):
     print("| %-*s| %-*s| %-*s| %-*s|" % (print_img_plh, img, print_tag_plh, tag1, print_tag_plh, tag2, print_tag_plh, tag3))
     return
 
 
-def load_json_cfg(json_cfg):
+def loadJsonCfg(json_cfg):
     ''' Remove comments from JSON cfg file and load the file '''
     with open(json_cfg, 'r') as config_file:
         config_without_comments = '\n'.join([row for row in config_file.readlines() if len(row.split('//')) == 1])
         return json.loads(config_without_comments, encoding="utf-8")
 
 
-def create_parser():  # pragma: no cover
+def createParser():  # pragma: no cover
     """
     sets up the main commandline parser
 
@@ -217,7 +253,7 @@ def parseTxtModeCfg(config):
                       config["txtModeCfg"]["deleteTxtFiles"])
 
 
-def getExifHdrList(cfgGeneral, cfgExif):
+def getExifHdrList(genData, cfgGeneral, cfgExif):
     print("## EXIF-Mode")
     print("")
     print("## Settings:")
