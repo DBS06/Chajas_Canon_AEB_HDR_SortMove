@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from collections import deque
+from dataclasses import dataclass
 import argparse
 import time
 import json
@@ -22,13 +23,53 @@ if sys.version_info < (3, 0):
 CDG_FILE_NAME = "config.json"
 DEFAULT_STOP_TAG = ""
 
+
+@dataclass
+class CfgGeneral:
+    hdrMainDir_Prefix: str
+    hdrMainDir_Postfix: str
+    hdrMainDir_useParentFolderName: bool
+    hdrMainDir_CustomName: str
+
+    hdrSubDir_Prefix: str
+    hdrSubDir_Postfix: str
+    hdrSubDir_useParentFolderName: bool
+    hdrSubDir_CustomName: str
+    hdrSubDir_numPadding: int
+
+    imageSrcFileEnding: str
+    previewFiles_create: bool
+    previewFiles_convertRawToJpg: bool
+    previewFiles_convertQuality: str
+
+    createLogFile: bool
+
+
+@dataclass
+class CfgExifMode:
+    primaryTag_name: str
+    primaryTag_value: str
+    secondaryTag_name: str
+    secondaryTag_value: str
+    tertiaryTag_name: str
+    tertiaryTag_value: str
+    hdrSequenceMinNum: int
+
+
+@dataclass
+class CfgTxtMode:
+    fileNameFilter: str
+    fileEnding: str
+    deleteTxtFiles: bool
+
+
 # placeholders for printing
 print_img_plh = 13
 print_tag_plh = 23
 
 # Global Variables
 searchDir = ""
-image_file_ending = ""
+imageFileEnding = ""
 imgFiles = []
 hdr_move_list = deque()
 hdr_skip_list = deque()
@@ -85,10 +126,16 @@ def main():  # pragma: no cover
     config = load_json_cfg(default_cfg_file_path)
 
     # TODO: check which mode should be used
-    parseGeneralCfg(config)
+    cfgGeneral = parseGeneralCfg(config)
+    cfgExif = parseExifModeCfg(config)
+    cfgTxt = parseTxtModeCfg(config)
+
+    print(cfgGeneral)
+    print(cfgExif)
+    print(cfgTxt)
 
     # hdr_move_lise =
-    getExifHdrList(config)
+    getExifHdrList(cfgGeneral, cfgExif)
 
 
 #############################
@@ -97,7 +144,7 @@ def main():  # pragma: no cover
 
 def read_exif(path, exif_details, stop_tag=DEFAULT_STOP_TAG):
     img = open(path, 'rb')
-    tags_img = exifread.process_file(img,  details=exif_details, stop_tag=stop_tag)
+    tags_img = exifread.process_file(img, details=exif_details, stop_tag=stop_tag)
     img.close()
     return tags_img
 
@@ -125,46 +172,60 @@ def create_parser():  # pragma: no cover
 
     :return: parser object
     """
-    main_parser = argparse.ArgumentParser(
+    mainParser = argparse.ArgumentParser(
         description='This script helps to sort HDR images from Canon Cameras')
 
-    main_parser.add_argument("-p", "--path", action="store", default='', help="path to image folder")
-    main_parser.add_argument("-m", "--mode", action="store", default='-',
-                             help="defines if HDR-Search is based on exif-data, txt-files, or decide based on folders content: <auto/exif/txt>")
-    main_parser.add_argument("-y", "--yes", action="store_true", default='',
-                             help="sorting starts automatically, no asking!")
+    mainParser.add_argument("-p", "--path", action="store", default='', help="path to image folder")
+    mainParser.add_argument("-m", "--mode", action="store", default='-',
+                            help="defines if HDR-Search is based on exif-data, txt-files, or decide based on folders content: <auto/exif/txt>")
+    mainParser.add_argument("-y", "--yes", action="store_true", default='',
+                            help="sorting starts automatically, no asking!")
 
-    return main_parser
+    return mainParser
 
 
 def parseGeneralCfg(config):
-    image_file_ending = config["general"]["imageSrcFileEnding"]
+    return CfgGeneral(config["general"]["hdrMainDir"]["Prefix"],
+                      config["general"]["hdrMainDir"]["Postfix"],
+                      config["general"]["hdrMainDir"]["Name"]["useParentFolderName"],
+                      config["general"]["hdrMainDir"]["Name"]["CustomName"],
+                      config["general"]["hdrSubDir"]["Prefix"],
+                      config["general"]["hdrSubDir"]["Postfix"],
+                      config["general"]["hdrSubDir"]["Name"]["useParentFolderName"],
+                      config["general"]["hdrSubDir"]["Name"]["CustomName"],
+                      config["general"]["hdrSubDir"]["numPadding"],
+                      config["general"]["imageSrcFileEnding"],
+                      config["general"]["previewFiles"]["create"],
+                      config["general"]["previewFiles"]["convertRawToJpg"],
+                      config["general"]["previewFiles"]["convertQuality"],
+                      config["general"]["createLogFile"])
 
 
-def getExifHdrList(config):
-    # HDR-Sequence Stuff
-    hdr_sequence_num_min = config["exifModeCfg"]["hdrSequenceMinNum"]
+def parseExifModeCfg(config):
+    return CfgExifMode(config["exifModeCfg"]["primaryTag"]["name"],
+                       config["exifModeCfg"]["primaryTag"]["value"],
+                       config["exifModeCfg"]["secondaryTag"]["name"],
+                       config["exifModeCfg"]["secondaryTag"]["value"],
+                       config["exifModeCfg"]["tertiaryTag"]["name"],
+                       config["exifModeCfg"]["tertiaryTag"]["value"],
+                       config["exifModeCfg"]["hdrSequenceMinNum"])
 
-    # EXIF-Tags which indicates that a picture is part of a HDR-Sequence:
-    # primary-tag is used to find the images which are part of an HDR-Sequence
-    # this tag should be part of 'Standard'-EXIF-Tags to increase the search speed, otherwise it would be really slow
-    exif_primary_tag = ExifTag(config["exifModeCfg"]["primaryTag"]["name"],
-                               config["exifModeCfg"]["primaryTag"]["value"])
 
-    # secondary- and tertiary-tag are used to find the beginning of a HDR-Sequence
-    exif_secondary_tag = ExifTag(config["exifModeCfg"]["secondaryTag"]["name"],
-                                 config["exifModeCfg"]["secondaryTag"]["value"])
-    exif_tertiary_tag = ExifTag(config["exifModeCfg"]["tertiaryTag"]["name"],
-                                config["exifModeCfg"]["tertiaryTag"]["value"])
+def parseTxtModeCfg(config):
+    return CfgTxtMode(config["txtModeCfg"]["fileNameFilter"],
+                      config["txtModeCfg"]["fileEnding"],
+                      config["txtModeCfg"]["deleteTxtFiles"])
 
+
+def getExifHdrList(cfgGeneral, cfgExif):
     print("## EXIF-Mode")
     print("")
     print("## Settings:")
-    print("# Primary EXIF-Tag:            " + exif_primary_tag.name + " -> Value: " + str(exif_primary_tag.val))
-    print("# Secondary EXIF-Tag:          " + exif_secondary_tag.name + " -> Value: " + str(exif_secondary_tag.val))
-    print("# Tertiary EXIF-Tag:           " + exif_tertiary_tag.name + " -> Value: " + str(exif_tertiary_tag.val))
-    print("# Search Images:               *" + image_file_ending)
-    print("# Min Images for HDR-Sequence: " + str(hdr_sequence_num_min))
+    print("# Primary EXIF-Tag:            " + cfgExif.primaryTag_name + " -> Value: " + cfgExif.primaryTag_value)
+    print("# Secondary EXIF-Tag:          " + cfgExif.secondaryTag_name + " -> Value: " + cfgExif.secondaryTag_value)
+    print("# Tertiary EXIF-Tag:           " + cfgExif.tertiaryTag_name + " -> Value: " + cfgExif.tertiaryTag_value)
+    print("# Search Images:               *" + cfgGeneral.imageSrcFileEnding)
+    print("# Min Images for HDR-Sequence: " + str(cfgExif.hdrSequenceMinNum))
     print("")
 
 

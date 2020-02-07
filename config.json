@@ -13,7 +13,7 @@
             "Postfix": "_HDRs",
             "Name": {
                 "useParentFolderName": true,
-                "customName": ""
+                "CustomName": ""
             }
         },
         "hdrSubDir": {
@@ -21,7 +21,7 @@
             "Postfix": "_HDR_",
             "Name": {
                 "useParentFolderName": true,
-                "customName": ""
+                "CustomName": ""
             },
             "numPadding": 3
         },
