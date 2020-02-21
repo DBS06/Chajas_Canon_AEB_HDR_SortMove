@@ -26,6 +26,7 @@
             "numPadding": 3
         },
         "imageSrcFileEnding": "CR2",
+        "hdrSequenceMinNum": 3,
         "previewFiles": {
             "create": true,
             // TODO: Implement
@@ -47,8 +48,7 @@
         "tertiaryTag": {
             "name": "MakerNote BracketValue",
             "value": "0"
-        },
-        "hdrSequenceMinNum": 3
+        }
     },
     // TXT-Mode Settings
     "txtModeCfg": {

@@ -39,6 +39,7 @@ class CfgGeneral:
     hdrSubDir_numPadding: int
 
     imageSrcFileEnding: str
+    hdrSequenceMinNum: int
     previewFiles_create: bool
     previewFiles_convertRawToJpg: bool
     previewFiles_convertQuality: str
@@ -54,7 +55,6 @@ class CfgExifMode:
     secondaryTag_value: str
     tertiaryTag_name: str
     tertiaryTag_value: str
-    hdrSequenceMinNum: int
 
 
 @dataclass
@@ -178,6 +178,8 @@ def main():  # pragma: no cover
         print("Auto proceed selected!")
         print("Start copying...")
 
+    copyHdrList(genData, cfgGeneral)
+
 
 #############################
 # Functions
@@ -235,7 +237,8 @@ def parseGeneralCfg(config):
                       config["general"]["hdrSubDir"]["Name"]["useParentFolderName"],
                       config["general"]["hdrSubDir"]["Name"]["CustomName"],
                       config["general"]["hdrSubDir"]["numPadding"],
-                      config["general"]["imageSrcFileEnding"],
+                      "." + config["general"]["imageSrcFileEnding"],
+                      config["general"]["hdrSequenceMinNum"],
                       config["general"]["previewFiles"]["create"],
                       config["general"]["previewFiles"]["convertRawToJpg"],
                       config["general"]["previewFiles"]["convertQuality"],
@@ -248,8 +251,7 @@ def parseExifModeCfg(config):
                        config["exifModeCfg"]["secondaryTag"]["name"],
                        config["exifModeCfg"]["secondaryTag"]["value"],
                        config["exifModeCfg"]["tertiaryTag"]["name"],
-                       config["exifModeCfg"]["tertiaryTag"]["value"],
-                       config["exifModeCfg"]["hdrSequenceMinNum"])
+                       config["exifModeCfg"]["tertiaryTag"]["value"])
 
 
 def parseTxtModeCfg(config):
@@ -266,7 +268,7 @@ def getExifHdrList(genData, cfgGeneral, cfgExif):
     print("# Secondary EXIF-Tag:          " + cfgExif.secondaryTag_name + " -> Value: " + cfgExif.secondaryTag_value)
     print("# Tertiary EXIF-Tag:           " + cfgExif.tertiaryTag_name + " -> Value: " + cfgExif.tertiaryTag_value)
     print("# Search Images:               *" + cfgGeneral.imageSrcFileEnding)
-    print("# Min Images for HDR-Sequence: " + str(cfgExif.hdrSequenceMinNum))
+    print("# Min Images for HDR-Sequence: " + str(cfgGeneral.hdrSequenceMinNum))
     print("")
 
     # Find all images in folder and add to file list
@@ -311,6 +313,75 @@ def getExifHdrList(genData, cfgGeneral, cfgExif):
             printTags(img, tags[cfgExif.primaryTag_name],
                       subtags[cfgExif.secondaryTag_name], subtags[cfgExif.tertiaryTag_name])
     printTable()
+
+
+def copyHdrList(genData, cfgGeneral):
+    imgMoveCount = 0
+    moveHdrCount = 0
+    skipImgCount = 0
+
+    if not os.path.exists(genData.targetMainDirPath):
+        os.makedirs(genData.targetMainDirPath)
+
+    # As long as hdr_move_list is not empty
+    while True:
+        try:
+            # extract first HDR-Sequence form hdr_move_list
+            imgMoveList = genData.hdrMoveList.popleft()
+
+            # if extracted HDR-Sequence is equal or larger hdr_sequence_num_min
+            # -> it is a complete HDR-Sequence
+            if len(imgMoveList) >= cfgGeneral.hdrSequenceMinNum:
+                pathExists = True
+                # Create sub-directory in hdr-directory if it does nor already exists
+                # if directory already exists, try next higher number for directory
+                while (pathExists):
+                    moveHdrCount += 1
+                    dirname = "%s%03d" % (genData.targetSubDirNameMask, moveHdrCount + genData.hdrCountOffset)
+                    dirpath = os.path.join(genData.targetMainDirPath, dirname)
+                    pathExists = os.path.exists(dirpath)
+
+                for img in imgMoveList:
+                    # Create target and source paths for image in imgMoveList
+                    sourcePath = os.path.join(genData.searchDirPath, img)
+                    targetPath = os.path.join(dirpath, img)
+                    # Create copy path for the first image from the HDR-Sequence
+                    # -> the script copies the first image from the HDR-Sequence to the HDR-Main-Folder and appends the folder name to the file name
+                    # -> makes it easier to look through the HDR-Sequences and to identify which folder has the remaining images
+                    targetPathCopy = "%s_HDR_%03d%s" % (os.path.join(genData.targetMainDirPath, img.replace(
+                        cfgGeneral.imageSrcFileEnding, "")), moveHdrCount + genData.hdrCountOffset, cfgGeneral.imageSrcFileEnding)
+
+                    # if target directory does not exists create it and copy the first image from the HDR-Sequence
+                    if not os.path.exists(dirpath):
+                        print("Makedir: %s" % (dirname))
+                        os.makedirs(dirpath)
+                        shutil.copy2(sourcePath, targetPathCopy)
+
+                    # Move the HDR-Sequence to the folder and inform the user about it
+                    print("Move: " + img)
+                    shutil.move(sourcePath, targetPath)  # move image to target directory
+                    imgMoveCount += 1
+            else:
+                # inform the user which files were skipped
+                genData.hdrSkipList.append(imgMoveList)
+                for img in imgMoveList:
+                    skipImgCount += 1
+                    print("HDR-Sequence is less then " + str(cfgGeneral.hdrSequenceMinNum))
+                    print("Skip: " + img)
+
+            print(" ")
+        except IndexError:
+            break
+
+    print("- Finish HDR Move Script -")
+    print(" ")
+    print("Summary: ")
+    print(" Found HDRs: %d" % (genData.hdrCount))
+    print(" Moved HDRs: %d" % (moveHdrCount))
+    print(" Moved Images:  %d" % (imgMoveCount))
+    print(" Skipped HDRs:  %d" % (len(genData.hdrSkipList)))
+    print(" Skipped Images:  %d" % (skipImgCount))
+    print(" ")
 
 
 if __name__ == "__main__":  # pragma: no cover
