@@ -61,7 +61,6 @@ class CfgExifMode:
 class CfgTxtMode:
     fileNameFilter: str
     fileEnding: str
-    deleteTxtFiles: bool
 
 
 @dataclass
@@ -160,6 +159,8 @@ def main():  # pragma: no cover
         print("targetMainDirPath:    " + genData.targetMainDirPath)
         print("targetSubDirNameMask: " + genData.targetSubDirNameMask)
         print("hdrCountOffset:       " + str(genData.hdrCountOffset))
+        print("####################################")
+        print("")
 
         if i == 0:
             getTxtHdrList(genData, cfgGeneral, cfgTxt)
@@ -211,6 +212,16 @@ def printTable():
 
 def printTags(img, tag1, tag2, tag3):
     print("| %-*s| %-*s| %-*s| %-*s|" % (print_img_plh, img, print_tag_plh, tag1, print_tag_plh, tag2, print_tag_plh, tag3))
+    return
+
+
+def printSmallTable():
+    print("+-%s+" % ("-" * print_img_plh))
+    return
+
+
+def printSmallTags(img):
+    print("| %-*s|" % (print_img_plh, img))
     return
 
 
@@ -268,15 +279,17 @@ def parseExifModeCfg(config):
 
 def parseTxtModeCfg(config):
     return CfgTxtMode(config["txtModeCfg"]["fileNameFilter"],
-                      config["txtModeCfg"]["fileEnding"],
-                      config["txtModeCfg"]["deleteTxtFiles"])
+                      config["txtModeCfg"]["fileEnding"])
 
 
 def getTxtHdrList(genData, cfgGeneral, cfgTxt):
-    pattern = re.compile("(IMG_\w+)")
+    pattern = re.compile(r"(IMG_\w+)")
     txtFiles = []
 
-    print("## TXT-Mode")
+    print("############")
+    print("# TXT-Mode #")
+    print("############")
+
     for file in os.listdir(genData.searchDirPath):
         if (file.endswith(cfgTxt.fileEnding.lower()) or file.endswith(cfgTxt.fileEnding.upper())) and cfgTxt.fileNameFilter in file:
             txtFiles.append(file)
@@ -288,19 +301,37 @@ def getTxtHdrList(genData, cfgGeneral, cfgTxt):
         print("\r\nHDR-TXTs Found: %d" % (len(txtFiles)))
 
     for txtFile in txtFiles:  # Go through every txt-file
-        img_count_regex = 0
-        img_copy_count = 0
+        # Create new hdr image array
+        genData.hdrList = []
         file = open(os.path.join(genData.searchDirPath, txtFile))
 
-        for it, line in enumerate(file):  # go thorugh every line in txt-file
-            for match in re.finditer(pattern, line):  # extract every image name from txt-file
-                pass
-                # TODO: Create hdrMoveList
+        genData.hdrCount += 1
+        print("\r\n| # HDR_%03d" % (genData.hdrCount + genData.hdrCountOffset))
+        printSmallTable()
+
+        # go thorugh every line in txt-file
+        for _, line in enumerate(file):
+            # extract every image name from txt-file
+            for match in re.finditer(pattern, line):
+                img = match.group(0) + cfgGeneral.imageSrcFileEnding
+                if os.path.exists((os.path.join(genData.searchDirPath, img))):
+                    printSmallTags(img)
+                    genData.hdrList.append(img)
+                else:
+                    print("'" + img + "' not found! -> skipped")
+
+            genData.hdrList.append(txtFile)
+            # append hdr image array to copy list
+            genData.hdrMoveList.append(genData.hdrList)
+
         file.close()
+        printSmallTable()
 
 
 def getExifHdrList(genData, cfgGeneral, cfgExif):
-    print("## EXIF-Mode")
+    print("#############")
+    print("# EXIF-Mode #")
+    print("#############")
     print("")
     print("## Settings:")
     print("# Primary EXIF-Tag:            " + cfgExif.primaryTag_name + " -> Value: " + cfgExif.primaryTag_value)
@@ -416,7 +447,6 @@ def copyHdrList(genData, cfgGeneral):
 
             print(" ")
         except IndexError:
-            print("ERROR: An IndexError occurred!")
             break
 
     print("- Finish HDR Move Script -")
