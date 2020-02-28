@@ -126,7 +126,7 @@ def main():  # pragma: no cover
     # Fill up general data
     genData.searchDir = os.path.basename(genData.searchDirPath)
     if (cfgGeneral.hdrMainDir_useParentFolderName):
-        genData.targetMainDirName = cfgGeneral.hdrMainDir_Prefix + genData.searchDir + cfgGeneral.hdrMainDir_Postfix
+        genData.targetMainDirName = cfgGeneral.hdrMainDir_Prefix + genData.searchDir + cfgGeneral.hdrMainDir_PostfixPostfix
     else:
         genData.targetMainDirName = cfgGeneral.hdrMainDir_Prefix + \
             cfgGeneral.hdrMainDir_CustomName + cfgGeneral.hdrMainDir_Postfix
@@ -139,46 +139,58 @@ def main():  # pragma: no cover
         genData.targetSubDirNameMask = cfgGeneral.hdrSubDir_Prefix + \
             cfgGeneral.hdrSubDir_CustomName + cfgGeneral.hdrSubDir_Postfix
 
-    # Check if a previous HDR-Move was done and extract the highest HDR-Number
-    if os.path.exists(genData.targetMainDirPath):
-        print("prexisting folder '" + genData.targetMainDirPath + "' found!")
-        existingHdrFolders = fnmatch.filter(os.listdir(genData.targetMainDirPath), genData.targetSubDirNameMask + '*')
-        if (len(existingHdrFolders) > 0):
-            genData.hdrCountOffset = 0
-            for folder in existingHdrFolders:
-                folderNum = int(folder.replace(genData.targetSubDirNameMask, ''))
-                if (folderNum > genData.hdrCountOffset):
-                    genData.hdrCountOffset = folderNum
+    for i in range(2):
+        # Check if a previous HDR-Move was done and extract the highest HDR-Number
+        if os.path.exists(genData.targetMainDirPath):
+            print("prexisting folder '" + genData.targetMainDirPath + "' found!")
+            existingHdrFolders = fnmatch.filter(os.listdir(genData.targetMainDirPath),
+                                                genData.targetSubDirNameMask + '*')
+            if (len(existingHdrFolders) > 0):
+                genData.hdrCountOffset = 0
+                for folder in existingHdrFolders:
+                    folderNum = int(folder.replace(genData.targetSubDirNameMask, ''))
+                    if (folderNum > genData.hdrCountOffset):
+                        genData.hdrCountOffset = folderNum
 
-    print("General Data:")
-    print("searchDirName:        " + genData.searchDirName)
-    print("searchDir:            " + genData.searchDir)
-    print("searchDirPath:        " + genData.searchDirPath)
-    print("targetMainDirName:    " + genData.targetMainDirName)
-    print("targetMainDirPath:    " + genData.targetMainDirPath)
-    print("targetSubDirNameMask: " + genData.targetSubDirNameMask)
-    print("hdrCountOffset:       " + str(genData.hdrCountOffset))
+        print("General Data:")
+        print("searchDirName:        " + genData.searchDirName)
+        print("searchDir:            " + genData.searchDir)
+        print("searchDirPath:        " + genData.searchDirPath)
+        print("targetMainDirName:    " + genData.targetMainDirName)
+        print("targetMainDirPath:    " + genData.targetMainDirPath)
+        print("targetSubDirNameMask: " + genData.targetSubDirNameMask)
+        print("hdrCountOffset:       " + str(genData.hdrCountOffset))
 
-    # TODO: check which mode should be used
-    getExifHdrList(genData, cfgGeneral, cfgExif)
+        if i == 0:
+            getTxtHdrList(genData, cfgGeneral, cfgTxt)
+        elif i == 1:
+            getExifHdrList(genData, cfgGeneral, cfgExif)
 
-    if len(genData.hdrMoveList) == 0:
-        sys.exit("No HDRs found in this directory!")
+        if len(genData.hdrMoveList) == 0:
+            print("No HDRs found in this directory!")
+            continue
 
-    print("\r\nHDRs Found: %d" % (len(genData.hdrMoveList)))
+        print("\r\nHDRs Found: %d" % (len(genData.hdrMoveList)))
 
-    if (args.yes is False):
-        # Ask user if he wants to proceed
-        proceed = input("Do you want to start the moving the found HDR-Sequences? (Y)es (N)o: ")
-        if ((proceed is "Y") or (proceed is "y")):
-            print("Start copying...")
+        if (args.yes is False):
+            # Ask user if he wants to proceed
+            proceed = input("Do you want to start the moving the found HDR-Sequences? (Y)es (N)o: ")
+            if ((proceed is "Y") or (proceed is "y")):
+                print("Start copying...")
+            else:
+                sys.exit("Exit by User!")
         else:
-            sys.exit("Exit by User!")
-    else:
-        print("Auto proceed selected!")
-        print("Start copying...")
+            print("Auto proceed selected!")
+            print("Start copying...")
 
-    copyHdrList(genData, cfgGeneral)
+        copyHdrList(genData, cfgGeneral)
+
+        genData.imgFiles.clear()
+        genData.hdrMoveList.clear()
+        genData.hdrSkipList.clear()
+        genData.hdrCount = 0
+        genData.hdrCountOffset = 0
+        genData.hdrList.clear()
 
 
 #############################
@@ -260,6 +272,33 @@ def parseTxtModeCfg(config):
                       config["txtModeCfg"]["deleteTxtFiles"])
 
 
+def getTxtHdrList(genData, cfgGeneral, cfgTxt):
+    pattern = re.compile("(IMG_\w+)")
+    txtFiles = []
+
+    print("## TXT-Mode")
+    for file in os.listdir(genData.searchDirPath):
+        if (file.endswith(cfgTxt.fileEnding.lower()) or file.endswith(cfgTxt.fileEnding.upper())) and cfgTxt.fileNameFilter in file:
+            txtFiles.append(file)
+
+    if len(txtFiles) == 0:
+        print("No HDR-TXTs found in this directory!")
+        return
+    else:
+        print("\r\nHDR-TXTs Found: %d" % (len(txtFiles)))
+
+    for txtFile in txtFiles:  # Go through every txt-file
+        img_count_regex = 0
+        img_copy_count = 0
+        file = open(os.path.join(genData.searchDirPath, txtFile))
+
+        for it, line in enumerate(file):  # go thorugh every line in txt-file
+            for match in re.finditer(pattern, line):  # extract every image name from txt-file
+                pass
+                # TODO: Create hdrMoveList
+        file.close()
+
+
 def getExifHdrList(genData, cfgGeneral, cfgExif):
     print("## EXIF-Mode")
     print("")
@@ -274,9 +313,9 @@ def getExifHdrList(genData, cfgGeneral, cfgExif):
     # Find all images in folder and add to file list
     for file in os.listdir(genData.searchDirPath):
         if (file.endswith(cfgGeneral.imageSrcFileEnding)):
-            #print(os.path.join(directory, file))
             genData.imgFiles.append(file)
 
+    genData.imgFiles.sort()
     genData.hdrCount = 0
 
     # Find HDR-Sequences
@@ -382,6 +421,8 @@ def copyHdrList(genData, cfgGeneral):
     print(" Skipped HDRs:  %d" % (len(genData.hdrSkipList)))
     print(" Skipped Images:  %d" % (skipImgCount))
     print(" ")
+
+    # TODO: Log-File output
 
 
 if __name__ == "__main__":  # pragma: no cover
