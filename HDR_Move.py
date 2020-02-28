@@ -126,7 +126,7 @@ def main():  # pragma: no cover
     # Fill up general data
     genData.searchDir = os.path.basename(genData.searchDirPath)
     if (cfgGeneral.hdrMainDir_useParentFolderName):
-        genData.targetMainDirName = cfgGeneral.hdrMainDir_Prefix + genData.searchDir + cfgGeneral.hdrMainDir_PostfixPostfix
+        genData.targetMainDirName = cfgGeneral.hdrMainDir_Prefix + genData.searchDir + cfgGeneral.hdrMainDir_Postfix
     else:
         genData.targetMainDirName = cfgGeneral.hdrMainDir_Prefix + \
             cfgGeneral.hdrMainDir_CustomName + cfgGeneral.hdrMainDir_Postfix
@@ -320,37 +320,43 @@ def getExifHdrList(genData, cfgGeneral, cfgExif):
 
     # Find HDR-Sequences
     for img in genData.imgFiles:
-        # read exif info from image without detail search for faster processing.
-        # Dont process makernote tags, dont extract the thumbnail image (if any)
-        tags = readExif(os.path.join(genData.searchDirPath, img), False, cfgExif.primaryTag_name)
-        # if value of exif_primary_tag from image has the specified value, it is part of a HDR-Sequence
-        if (str(tags[cfgExif.primaryTag_name]) == cfgExif.primaryTag_value):
-            # again read exif info from image, but this time with details
-            # -> makernote tags are required to find out with which image a HDR-Sequence starts and stops
-            subtags = readExif(os.path.join(genData.searchDirPath, img), True)
-            # if value of exif_secondary_tag and exif_tertiary_tag matches, a new HDR-Sequence will be recognized
-            if (str(subtags[cfgExif.secondaryTag_name]) == cfgExif.secondaryTag_value) and ((str(subtags[cfgExif.tertiaryTag_name]) == cfgExif.tertiaryTag_value)):
-                # Create new hdr image array
-                genData.hdrList = []
-                genData.hdrList.append(img)
-                # append hdr image array to copy list
-                genData.hdrMoveList.append(genData.hdrList)
+        try:
+            # read exif info from image without detail search for faster processing.
+            # Dont process makernote tags, dont extract the thumbnail image (if any)
+            tags = readExif(os.path.join(genData.searchDirPath, img), False, cfgExif.primaryTag_name)
+            # if value of exif_primary_tag from image has the specified value, it is part of a HDR-Sequence
+            if (str(tags[cfgExif.primaryTag_name]) == cfgExif.primaryTag_value):
+                # again read exif info from image, but this time with details
+                # -> makernote tags are required to find out with which image a HDR-Sequence starts and stops
+                subtags = readExif(os.path.join(genData.searchDirPath, img), True)
+                # if value of exif_secondary_tag and exif_tertiary_tag matches, a new HDR-Sequence will be recognized
+                if (str(subtags[cfgExif.secondaryTag_name]) == cfgExif.secondaryTag_value) and ((str(subtags[cfgExif.tertiaryTag_name]) == cfgExif.tertiaryTag_value)):
+                    # Create new hdr image array
+                    genData.hdrList = []
+                    genData.hdrList.append(img)
+                    # append hdr image array to copy list
+                    genData.hdrMoveList.append(genData.hdrList)
 
-                if genData.hdrCount != 0:
+                    if genData.hdrCount != 0:
+                        printTable()
+
+                    # increase hdr counter and print message
+                    genData.hdrCount += 1
+                    print("\r\n| # HDR_%03d" % (genData.hdrCount + genData.hdrCountOffset))
+                    printTable()
+                    printTags("IMG-Name", cfgExif.primaryTag_name, cfgExif.secondaryTag_name, cfgExif.tertiaryTag_name)
                     printTable()
 
-                # increase hdr counter and print message
-                genData.hdrCount += 1
-                print("\r\n| # HDR_%03d" % (genData.hdrCount + genData.hdrCountOffset))
-                printTable()
-                printTags("IMG-Name", cfgExif.primaryTag_name, cfgExif.secondaryTag_name, cfgExif.tertiaryTag_name)
-                printTable()
+                # if exif_secondary_tag- and exif_tertiary_tag-value does not match image must be part of the previous sequence
+                else:
+                    genData.hdrList.append(img)
 
-            # if exif_secondary_tag- and exif_tertiary_tag-value does not match image must be part of the previous sequence
-            else:
-                genData.hdrList.append(img)
-            printTags(img, tags[cfgExif.primaryTag_name],
-                      subtags[cfgExif.secondaryTag_name], subtags[cfgExif.tertiaryTag_name])
+                printTags(img, tags[cfgExif.primaryTag_name],
+                          subtags[cfgExif.secondaryTag_name], subtags[cfgExif.tertiaryTag_name])
+        except KeyError:
+            print("ERROR: Reading EXIF-Data from Image '" + img + "' FAILED! -> image skipped")
+        except:
+            print("ERROR: Something went wrong during processing Image '" + img + "'!")
     printTable()
 
 
@@ -410,6 +416,7 @@ def copyHdrList(genData, cfgGeneral):
 
             print(" ")
         except IndexError:
+            print("ERROR: An IndexError occurred!")
             break
 
     print("- Finish HDR Move Script -")
