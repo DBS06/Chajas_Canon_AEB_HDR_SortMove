@@ -49,6 +49,7 @@ class CfgGeneral:
 
 @dataclass
 class CfgExifMode:
+    enable: bool
     primaryTag_name: str
     primaryTag_value: str
     secondaryTag_name: str
@@ -59,6 +60,7 @@ class CfgExifMode:
 
 @dataclass
 class CfgTxtMode:
+    enable: bool
     fileNameFilter: str
     fileEnding: str
 
@@ -162,10 +164,12 @@ def main():  # pragma: no cover
         print("####################################")
         print("")
 
-        if i == 0:
+        if i == 0 and cfgTxt.enable:
             getTxtHdrList(genData, cfgGeneral, cfgTxt)
-        elif i == 1:
+        elif i == 1 and cfgExif.enable:
             getExifHdrList(genData, cfgGeneral, cfgExif)
+        else:
+            continue
 
         if len(genData.hdrMoveList) == 0:
             print("No HDRs found in this directory!")
@@ -269,7 +273,8 @@ def parseGeneralCfg(config):
 
 
 def parseExifModeCfg(config):
-    return CfgExifMode(config["exifModeCfg"]["primaryTag"]["name"],
+    return CfgExifMode(config["exifModeCfg"]["enable"],
+                       config["exifModeCfg"]["primaryTag"]["name"],
                        config["exifModeCfg"]["primaryTag"]["value"],
                        config["exifModeCfg"]["secondaryTag"]["name"],
                        config["exifModeCfg"]["secondaryTag"]["value"],
@@ -278,7 +283,8 @@ def parseExifModeCfg(config):
 
 
 def parseTxtModeCfg(config):
-    return CfgTxtMode(config["txtModeCfg"]["fileNameFilter"],
+    return CfgTxtMode(config["txtModeCfg"]["enable"],
+                      config["txtModeCfg"]["fileNameFilter"],
                       config["txtModeCfg"]["fileEnding"])
 
 
@@ -431,7 +437,8 @@ def copyHdrList(genData, cfgGeneral):
                     if not os.path.exists(dirpath):
                         print("Makedir: %s" % (dirname))
                         os.makedirs(dirpath)
-                        shutil.copy2(sourcePath, targetPathCopy)
+                        if cfgGeneral.previewFiles_create:
+                            shutil.copy2(sourcePath, targetPathCopy)
 
                     # Move the HDR-Sequence to the folder and inform the user about it
                     print("Move: " + img)

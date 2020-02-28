@@ -1,11 +1,4 @@
 {
-    // defines if HDR-Search is based on exif-data, txt-files, or decide based on folders content
-    // Possible values: <-/auto/exif/txt>
-    //                  -:    Ask at startup
-    //                  auto: auto detection
-    //                  exif: exif-mode
-    //                  txt:  txt-mode
-    "detectionMode": "auto",
     // General Settings
     "general": {
         "hdrMainDir": {
@@ -33,10 +26,12 @@
             "convertRawToJpg": false,
             "convertQuality": "high"
         },
-        "createLogFile": true
+        // TODO: Implement
+        "createLogFile": false
     },
     // EXIF-Mode Settings
     "exifModeCfg": {
+        "enable": true,
         "primaryTag": {
             "name": "EXIF ExposureMode",
             "value": "Auto Bracket"
@@ -52,6 +47,7 @@
     },
     // TXT-Mode Settings
     "txtModeCfg": {
+        "enable": true,
         "fileNameFilter": "HDR_",
         "fileEnding": "txt"
     }
