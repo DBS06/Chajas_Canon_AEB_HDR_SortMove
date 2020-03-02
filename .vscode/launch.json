@@ -11,7 +11,8 @@
             "program": "HDR_Move.py",
             "args": [
                 "-p",
-                "D:\\HDRSort_Test\\Zentralfriedhof"
+                "D:\\HDRSort_Test\\Zentralfriedhof_SS",
+                "-y"
             ],
             "console": "integratedTerminal"
         }

@@ -23,7 +23,7 @@
         "previewFiles": {
             "create": true,
             // TODO: Implement
-            "convertRawToJpg": false,
+            "convertRawToJpg": true,
             "convertQuality": "high"
         },
         // TODO: Implement

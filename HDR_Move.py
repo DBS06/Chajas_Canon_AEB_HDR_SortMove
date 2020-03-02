@@ -12,6 +12,10 @@ import shutil
 import sys
 import exifread
 import fnmatch
+'''
+from PIL import Image
+import io
+'''
 
 if sys.version_info < (3, 0):
     print("Sorry, Python 3.x is required")
@@ -430,15 +434,26 @@ def copyHdrList(genData, cfgGeneral):
                     # Create copy path for the first image from the HDR-Sequence
                     # -> the script copies the first image from the HDR-Sequence to the HDR-Main-Folder and appends the folder name to the file name
                     # -> makes it easier to look through the HDR-Sequences and to identify which folder has the remaining images
-                    targetPathCopy = "%s_HDR_%03d%s" % (os.path.join(genData.targetMainDirPath, img.replace(
-                        cfgGeneral.imageSrcFileEnding, "")), moveHdrCount + genData.hdrCountOffset, cfgGeneral.imageSrcFileEnding)
+                    targetPathCopy = "%s_HDR_%03d" % (os.path.join(genData.targetMainDirPath, img.replace(
+                        cfgGeneral.imageSrcFileEnding, "")), moveHdrCount + genData.hdrCountOffset)
 
                     # if target directory does not exists create it and copy the first image from the HDR-Sequence
                     if not os.path.exists(dirpath):
                         print("Makedir: %s" % (dirname))
                         os.makedirs(dirpath)
                         if cfgGeneral.previewFiles_create:
-                            shutil.copy2(sourcePath, targetPathCopy)
+                            shutil.copy2(sourcePath, targetPathCopy + cfgGeneral.imageSrcFileEnding)
+                            '''
+                            if cfgGeneral.previewFiles_convertRawToJpg:
+                                # TODO: extracted thumbnail has a really baaaad quality -> do it with https://pypi.org/project/rawpy/
+                                tags = readExif(sourcePath, True)
+                                thumb = tags['JPEGThumbnail']
+                                im = Image.open(io.BytesIO(thumb))
+                                im.save(targetPathCopy + ".jpg", "JPEG")
+
+                            else:
+                                shutil.copy2(sourcePath, targetPathCopy + cfgGeneral.imageSrcFileEnding)
+                            '''
 
                     # Move the HDR-Sequence to the folder and inform the user about it
                     print("Move: " + img)
